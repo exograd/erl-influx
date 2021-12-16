@@ -11,7 +11,7 @@
 
 # 1.2.0
 ## Misc
-- Replace gun by [erl-mhttp](https://github.com/galdor/erl-mhttp).
+- Replace gun by [erl-mhttp](https://github.com/exograd/erl-mhttp).
 - Send points every 2.5 seconds by default, instead of every second.
 
 # 1.1.0
