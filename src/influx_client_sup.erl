@@ -14,40 +14,34 @@
 
 -module(influx_client_sup).
 
--behaviour(supervisor).
+-behaviour(c_sup).
 
 -export([start_link/0, start_client/2]).
--export([init/1]).
+-export([children/0]).
 
--spec start_link() -> supervisor:startlink_ret().
+-spec start_link() -> c_sup:start_ret().
 start_link() ->
-  supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+  c_sup:start_link({local, ?MODULE}, ?MODULE, #{}).
 
 -spec start_client(influx:client_id(), influx_client:options()) ->
-        supervisor:startchild_ret().
+        c_sup:result(pid()).
 start_client(Id, Options) ->
-  supervisor:start_child(?MODULE, client_child_spec(Id, Options)).
+  Spec = #{start => fun influx_client:start_link/1,
+           start_args => [Id, Options]},
+  c_sup:start_child(?MODULE, Id, Spec).
 
-init([]) ->
-  Children = client_child_specs(),
-  {ok, {{one_for_one, 1, 5}, Children}}.
-
--spec client_child_specs() -> [supervisor:child_spec()].
-client_child_specs() ->
-  EnvClientSpecs = application:get_env(influx, clients, #{}),
-  ClientSpecs = case maps:is_key(default, EnvClientSpecs) of
-                  true ->
-                    EnvClientSpecs;
-                  false ->
-                    EnvClientSpecs#{default => #{}}
-                end,
+-spec children() -> c_sup:child_specs().
+children() ->
+  ClientSpecs0 = application:get_env(influx, clients, #{}),
+  ClientSpecs =
+    case maps:is_key(default, ClientSpecs0) of
+      true ->
+        ClientSpecs0;
+      false ->
+        ClientSpecs0#{default => #{}}
+    end,
   maps:fold(fun (Id, Options, Acc) ->
-                [client_child_spec(Id, Options) | Acc]
-            end,
-            [], ClientSpecs).
-
--spec client_child_spec(influx:client_id(), influx_client:options()) ->
-        supervisor:child_spec().
-client_child_spec(Id, Options) ->
-  #{id => Id,
-    start => {influx_client, start_link, [Id, Options]}}.
+                Spec = #{start => fun influx_client:start_link/2,
+                         start_args => [Id, Options]},
+                [{Id, Spec} | Acc]
+            end, [], ClientSpecs).

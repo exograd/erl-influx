@@ -14,22 +14,18 @@
 
 -module(influx_sup).
 
--behaviour(supervisor).
+-behaviour(c_sup).
 
 -export([start_link/0]).
--export([init/1]).
+-export([children/0]).
 
+-spec start_link() -> c_sup:start_ret().
 start_link() ->
-  supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+  c_sup:start_link({local, ?MODULE}, ?MODULE, #{}).
 
-init([]) ->
-  Children = [#{id => clients,
-                start => {influx_client_sup, start_link, []},
-                type => supervisor},
-              #{id => probes,
-                start => {influx_probe_sup, start_link, []},
-                type => supervisor}],
-  Flags = #{strategy => one_for_one,
-            intensity => 1,
-            period => 5},
-  {ok, {Flags, Children}}.
+-spec children() -> c_sup:child_specs().
+children() ->
+  [{clients,
+    #{start => fun influx_client_sup:start_link/0}},
+   {probes,
+    #{start => fun influx_probe_sup:start_link/0}}].

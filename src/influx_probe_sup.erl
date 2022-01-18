@@ -14,27 +14,21 @@
 
 -module(influx_probe_sup).
 
--behaviour(supervisor).
+-behaviour(c_sup).
 
 -export([start_link/0]).
--export([init/1]).
+-export([children/0]).
 
+-spec start_link() -> c_sup:start_ret().
 start_link() ->
-  supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+  c_sup:start_link({local, ?MODULE}, ?MODULE, #{}).
 
-init([]) ->
-  Children = probe_child_specs(),
-  Flags = #{strategy => one_for_one,
-            intensity => 1,
-            period => 5},
-  {ok, {Flags, Children}}.
+-spec children() -> c_sup:child_specs().
+children() ->
+  [{Probe, #{start => fun Probe:start_link/0}} || Probe <- probes()].
 
 -spec probes() -> [module()].
 probes() ->
   [influx_memory_probe,
    influx_system_info_probe,
    influx_statistics_probe].
-
--spec probe_child_specs() -> [supervisor:child_spec()].
-probe_child_specs() ->
-  [#{id => Mod, start => {Mod, start_link, []}} || Mod <- probes()].
