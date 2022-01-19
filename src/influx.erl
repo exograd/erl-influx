@@ -27,7 +27,7 @@
 
 -type key() :: atom() | unicode:chardata().
 
--type field_value() :: float() | integer() | binary() | boolean().
+-type field_value() :: float() | integer() | binary() | atom() | boolean().
 -type fields() :: #{key() := field_value()}.
 
 -type tags() :: #{key() := key()}.

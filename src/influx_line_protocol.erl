@@ -81,10 +81,8 @@ encode_field_value(V) when is_float(V) ->
   io_lib_format:fwrite_g(V);
 encode_field_value(V) when is_integer(V) ->
   [integer_to_binary(V), $i];
-encode_field_value(true) ->
-  <<"true">>;
-encode_field_value(false) ->
-  <<"false">>;
+encode_field_value(V) when is_atom(V) ->
+  atom_to_binary(V);
 encode_field_value(V) when is_binary(V) ->
   encode_string(V).
 
