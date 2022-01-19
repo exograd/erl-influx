@@ -26,7 +26,7 @@ start_link() ->
 -spec start_client(influx:client_id(), influx_client:options()) ->
         c_sup:result(pid()).
 start_client(Id, Options) ->
-  Spec = #{start => fun influx_client:start_link/1,
+  Spec = #{start => fun influx_client:start_link/2,
            start_args => [Id, Options]},
   c_sup:start_child(?MODULE, Id, Spec).
 
