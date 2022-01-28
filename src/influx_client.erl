@@ -41,7 +41,8 @@
           uri := uri:uri(),
           backoff := backoff:backoff(),
           queue := [influx:point()],
-          queue_length := non_neg_integer()}.
+          queue_length := non_neg_integer(),
+          client_tags := influx:tags()}.
 
 -spec process_name(influx:client_id()) -> atom().
 process_name(Id) ->
@@ -66,11 +67,15 @@ init([Options]) ->
     {ok, URI} ->
       Interval = maps:get(send_interval, Options, 2500),
       Backoff = backoff:type(backoff:init(Interval, 60000), jitter),
+      {ok, Hostname} = net:gethostname(),
+      ClientTags = maps:merge(#{host => list_to_binary(Hostname)},
+                              maps:get(tags, Options, #{})),
       State = #{options => Options,
                 uri => URI,
                 backoff => Backoff,
                 queue => [],
-                queue_length => 0},
+                queue_length => 0,
+                client_tags => ClientTags},
       schedule_next_send(State),
       {ok, State};
     {error, Reason} ->
@@ -80,13 +85,13 @@ init([Options]) ->
 handle_call({enqueue_point, Point}, _From,
             State = #{options := Options,
                       queue := Queue,
-                      queue_length := QueueLength}) ->
+                      queue_length := QueueLength,
+                      client_tags := ClientTags}) ->
   MaxQueueLength = maps:get(max_queue_length, Options, 10_000),
   if
     QueueLength >= MaxQueueLength ->
       {reply, {error, queue_full}, State};
     true ->
-      ClientTags = maps:get(tags, Options, #{}),
       PointTags = maps:get(tags, Point, #{}),
       Point2 = Point#{tags => maps:merge(ClientTags, PointTags)},
       State2 = State#{queue => [Point2 | Queue],

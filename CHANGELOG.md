@@ -3,6 +3,7 @@
 # Next Version
 ## Features
 - Add `influx:enqueue_point/2`.
+- Always add the hostname as tag `host` for all points.
 ## Bugs
 - Fix handling of unknown `gen_server` calls.
 ## Misc
