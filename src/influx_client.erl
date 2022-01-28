@@ -26,20 +26,22 @@
 -type name() :: c_gen_server:name().
 -type ref() :: c_gen_server:ref().
 
--type options() :: #{uri => binary(),
-                     mhttp_pool => mhttp:pool_id(),
-                     max_queue_length => pos_integer(),
-                     send_interval => pos_integer(),
-                     bucket => binary(),
-                     org => binary(),
-                     precision => influx:precision(),
-                     tags => influx:tags()}.
+-type options() ::
+        #{uri => binary(),
+          mhttp_pool => mhttp:pool_id(),
+          max_queue_length => pos_integer(),
+          send_interval => pos_integer(),
+          bucket => binary(),
+          org => binary(),
+          precision => influx:precision(),
+          tags => influx:tags()}.
 
--type state() :: #{options := options(),
-                   uri := uri:uri(),
-                   backoff := backoff:backoff(),
-                   queue := [influx:point()],
-                   queue_length := non_neg_integer()}.
+-type state() ::
+        #{options := options(),
+          uri := uri:uri(),
+          backoff := backoff:backoff(),
+          queue := [influx:point()],
+          queue_length := non_neg_integer()}.
 
 -spec process_name(influx:client_id()) -> atom().
 process_name(Id) ->
